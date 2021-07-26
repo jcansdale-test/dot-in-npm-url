@@ -7,13 +7,17 @@ jobs:
   publish:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        postfix: ["", ".", "foo"]
+
     steps:
       - uses: actions/checkout@v2
 
       - uses: actions/setup-node@v1
         with:
           scope: ${{ github.repository_owner }}
-          registry-url: https://npm.pkg.github.com/.
+          registry-url: https://npm.pkg.github.com/${{ matrix.postfix }}
 
       - name: Create a package called @${{ github.repository }}
         run: npm init --scope ${{ github.repository_owner }} -y
@@ -31,9 +35,3 @@ jobs:
         run: npm publish --verbose
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
-
-      - name: Trigger npm-install workflow
-        if: ${{ env.GITHUB_TOKEN != null }}
-        run: gh api repos/${{ github.repository_owner }}/npm-install/dispatches <<< '{"event_type":"build"}' --input -
-        env:
-          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
